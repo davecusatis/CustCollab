@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <h1>Start New Cust Collab Room</h1>
+    <form action="/newroom/" method="post">
+        Enter Name:
+        <input type="text" name="name"><br/>
+        Enter Room Id:
+        <input type="text" name="room_id"/><br/>
+        <input type="submit"/>
+        {% raw xsrf_form_html() %}
+    </form>
+
+</body>
+</html>
