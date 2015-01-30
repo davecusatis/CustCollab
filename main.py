@@ -138,14 +138,17 @@ class MessageUpdatesHandler(BaseHandler):
     @gen.coroutine
     def post(self):
         cursor = self.get_argument("cursor", None)
-        self.future = room_buffers["index"].wait_for_messages(cursor=cursor)
+        #self.future = room_buffers["index"].wait_for_messages(cursor=cursor)
+        self.future = room_buffers[self.request.headers.get('Referer')].wait_for_messages(cursor=cursor)
+
         messages = yield self.future
         if self.request.connection.stream.closed():
             return
         self.write(dict(messages=messages))
 
     def on_connection_close(self):
-        room_buffers["index"].cancel_wait(self.future)
+        for room in room_buffers:
+            room.cancel_wait(self.future)
 
 
 class AuthLoginHandler(BaseHandler, tornado.auth.GoogleMixin):
