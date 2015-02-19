@@ -215,7 +215,7 @@ class RoomHandler(BaseHandler):
         #self.write(self.get_current_user())
         user = self.get_current_user()
         room = collection.find_one({'room_id': room_id})
-        print(dict(room_buffers))
+
         if room is not None:
             room_buffers[room_id].cache = room['messages']
 
