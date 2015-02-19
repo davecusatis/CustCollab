@@ -8,7 +8,8 @@ import tornado.web
 import os.path
 import uuid
 import re
-
+import json
+from bson import json_util
 from tornado.concurrent import Future
 from tornado import gen
 from tornado.options import define, options, parse_command_line
@@ -73,7 +74,11 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render("index.html", messages=room_buffers["index"].cache)
+        self.render('home.html')
+        # print (dict(room_buffers['index'].cache))
+        # self.set_header("Content-Type", "application/json")
+        # self.write(json.dumps(room_buffers['index'].cache))
+
 
 
 class LoginHandler(BaseHandler):
@@ -139,7 +144,7 @@ class MessageUpdatesHandler(BaseHandler):
     def post(self):
         cursor = self.get_argument("cursor", None)
         #self.future = room_buffers["index"].wait_for_messages(cursor=cursor)
-        self.future = room_buffers[self.request.headers.get('Referer')].wait_for_messages(cursor=cursor)
+        self.future = room_buffers[get_room_id(self.request.headers.get('Referer'))].wait_for_messages(cursor=cursor)
 
         messages = yield self.future
         if self.request.connection.stream.closed():
@@ -149,7 +154,6 @@ class MessageUpdatesHandler(BaseHandler):
     def on_connection_close(self):
         for room in room_buffers:
             room.cancel_wait(self.future)
-
 
 class AuthLoginHandler(BaseHandler, tornado.auth.GoogleMixin):
     @gen.coroutine
@@ -168,6 +172,35 @@ class AuthLogoutHandler(BaseHandler):
         self.write("you logged out")
 
 
+# class RoomHandler(BaseHandler):
+#     # def prepare(self, room_id):
+#     #     # todo load chat/editor/google hangs
+#     #     # loads chat
+#     #     room_buffers[room_id].cache = collection.find_one({'room_id': room_id}).messages
+#     #     self.render("index.html", room_buffers[room_id].cache)
+#     #
+#     #     return
+#
+#     @tornado.web.authenticated
+#     def get(self, room_id):
+#         #self.write(self.get_current_user())
+#         user = self.get_current_user()
+#         room = collection.find_one({'room_id': room_id})
+#
+#         if room is not None:
+#             room_buffers[room_id].cache = room['messages']
+#
+#         #if the user is not in the room, then add that son of a gun
+#         if (room is not None) and (user not in room['users']):
+#             collection.update(
+#                 room,
+#                 {'$addToSet': {'users': user}}
+#             )
+#
+#         self.render("index.html", messages=room['messages'])
+#         return
+
+
 class RoomHandler(BaseHandler):
     # def prepare(self, room_id):
     #     # todo load chat/editor/google hangs
@@ -182,7 +215,7 @@ class RoomHandler(BaseHandler):
         #self.write(self.get_current_user())
         user = self.get_current_user()
         room = collection.find_one({'room_id': room_id})
-
+        print(dict(room_buffers))
         if room is not None:
             room_buffers[room_id].cache = room['messages']
 
@@ -192,9 +225,8 @@ class RoomHandler(BaseHandler):
                 room,
                 {'$addToSet': {'users': user}}
             )
-
-        self.render("index.html", messages=room['messages'])
-        return
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(room['messages'], default=json_util.default))
 
 
 class NewRoomHandler(BaseHandler):

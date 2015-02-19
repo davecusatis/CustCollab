@@ -21,13 +21,33 @@ td {
 }
 
 #body {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
+    position: relative;
+    height: inherit;
+    /*width: 20%;*/
+    overflow: auto;
 }
 
 #input {
-    margin-top: 0.5em;
+    /*margin-top: 0.5em;*/
+    margin: 1.5%;
+    position: relative;
+    clear: both;
+    float: left;
+    width: inherit;
+}
+
+#container {
+    height: 500px;
+    width: 500px;
+    position: relative;
+    float: left;
+    /*overflow-y: auto;*/
+    /*height: 50%;*/
+    /*width: 10%;*/
+}
+
+#inbox{
+    /*float: right;*/
 }
 
 #inbox .message {
