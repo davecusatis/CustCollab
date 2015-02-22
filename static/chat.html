@@ -1,0 +1,33 @@
+<div id="container">
+    <div ng-repeat="msg in messages" class="message"><b>{{msg['name']}} : </b>{{msg['body']}}</div>
+    <!--<div ng-repeat="msg in messages">-->
+        <!--&lt;!&ndash;<div class="message" id="{{msg['id']}}"><b>{{ msg['from']['name'] }}: </b> {{msg['body']}}</div>&ndash;&gt;-->
+        <!--<div ng-repeat="msg in messages" class="message"><b>{{msg['name']}}: </b>{{msg['body']}}</div>-->
+    <!--</div>-->
+    <div id="input">
+        <form ng-submit="submit()">
+            <table>
+                <tr>
+                    <td><input ng-model="messageText" name="body" id="message"/></td>
+                    <td style="padding-left:5px">
+                        <input type="submit" value="Post"/>
+                        <!--<input type="hidden" name="next" value="{{ request.path }}"/>-->
+                        <!--{% module xsrf_form_html() %}-->
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <!--<form action="/a/message/new" method="post" id="messageform">-->
+            <!--<table>-->
+                <!--<tr>-->
+                    <!--<td><input name="body" id="message"/></td>-->
+                    <!--<td style="padding-left:5px">-->
+                        <!--<input type="submit" value="Post"/>-->
+                        <!--<input type="hidden" name="next" value="{{ request.path }}"/>-->
+                        <!--&lt;!&ndash;{% module xsrf_form_html() %}&ndash;&gt;-->
+                    <!--</td>-->
+                <!--</tr>-->
+            <!--</table>-->
+        <!--</form>-->
+    </div>
+</div>

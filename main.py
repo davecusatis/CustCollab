@@ -64,6 +64,9 @@ room_buffers = {}
 room_buffers["index"] = MessageBuffer()
 
 class BaseHandler(tornado.web.RequestHandler):
+    def set_default_headers(self):
+        self.set_header('Access-Control-Allow-Origin', 'http:/localhost:8888')
+
     def get_current_user(self):
         user_json = self.get_secure_cookie("chatdemo_user")
         if not user_json:
@@ -74,12 +77,42 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render('home.html')
-        # print (dict(room_buffers['index'].cache))
-        # self.set_header("Content-Type", "application/json")
-        # self.write(json.dumps(room_buffers['index'].cache))
+        user = self.get_current_user()
+        room_id = 'index'
+        room_buffers[room_id] = MessageBuffer()
+        collection.insert({
+            'room_id': room_id,
+            'messages': room_buffers[room_id].cache,
+            'users': [user]
+        })
+        self.render('index.html')
 
+    def post(self):
+        response = json.loads(self.request.body)
+        room_document = collection.find_one({"room_id": response['room_id']})
+        if room_document is not None:
+            collection.update(
+                room_document,
+                {
+                    '$set': {'messages': response['messages']}
+                },
+                upsert=False,
+                multi=False
+            )
 
+class MessageSaver(BaseHandler):
+    def post(self):
+        response = json.loads(self.request.body)
+        room_document = collection.find_one({"room_id": response['room_id']})
+        if room_document is not None:
+            collection.update(
+                room_document,
+                {
+                    '$set': {'messages': response['messages']}
+                },
+                upsert=False,
+                multi=False
+            )
 
 class LoginHandler(BaseHandler):
     def prepare(self):
@@ -98,7 +131,6 @@ def get_room_id(referer):
     else:
         room = room.group(0)
     return room
-
 
 class MessageNewHandler(BaseHandler):
     @tornado.web.authenticated
@@ -212,7 +244,6 @@ class RoomHandler(BaseHandler):
 
     @tornado.web.authenticated
     def get(self, room_id):
-        #self.write(self.get_current_user())
         user = self.get_current_user()
         room = collection.find_one({'room_id': room_id})
 
@@ -239,7 +270,6 @@ class NewRoomHandler(BaseHandler):
             'messages': room_buffers[room_id].cache,
             'users': [user]
         })
-        self.redirect("/room/" + room_id)
 
 
 def main():

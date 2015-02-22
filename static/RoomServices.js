@@ -6,6 +6,14 @@ var roomServices = angular.module('roomServices', ['ngResource']);
 roomServices.factory('rooms', ['$resource',
     function($resource){
         return $resource('/room/:room_id', {room_id: '@room_id'}, {
-            query: {method: 'GET', params:{}, isArray:true}
+            get: {method: 'GET', params:{room_id: '@room_id'}, isArray:true},
+            post: {method: 'POST', params: {room_id: '@room_id', messages: '@messages'}, isArray:false}
+        });
+    }]);
+
+roomServices.factory('user', ['$resource',
+    function($resource){
+        return $resource('/user/', {}, {
+           get: {method: 'GET', params: {}, isArray: false}
         });
     }]);
