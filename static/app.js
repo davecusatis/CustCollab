@@ -3,11 +3,11 @@
  */
 
 'use strict';
-var mainApp = angular.module('ChatApp', ['ngRoute',
+var mainApp = angular.module('ChatApp', ['ngRoute', 'ngCookies',
     'roomControllers', 'roomServices'
 ]);
 
-mainApp.config(function($routeProvider, $httpProvider, $locationProvider) {
+mainApp.config(function($routeProvider, $httpProvider, $cookies, $locationProvider) {
     $routeProvider.
         when('/', {
             templateUrl: '/static/chat.html',
@@ -18,6 +18,5 @@ mainApp.config(function($routeProvider, $httpProvider, $locationProvider) {
         controller: 'roomCtrl'
         });
 
-    $httpProvider.defaults.xsrfCookieName = 'chatdemo_user';
-    //$locationProvider.html5mode(true);
+        //$http.defaults.headers.post['Cookie'] = $cookies['chatdemo_user'];
 });
