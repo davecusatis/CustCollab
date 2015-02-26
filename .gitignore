@@ -43,4 +43,5 @@ Temporary Items
 .apdisk
 
 # intellij files
-.idea\
+.idea/*
+.idea/workspace.xml
