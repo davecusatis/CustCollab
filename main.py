@@ -77,7 +77,7 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        user = self.get_current_user()
+        user = self.get_current_user()['name']
         room_id = 'index'
         room_buffers[room_id] = MessageBuffer()
         collection.insert({
@@ -87,20 +87,6 @@ class MainHandler(BaseHandler):
         })
         self.render('index.html')
 
-    def post(self):
-        response = json.loads(self.request.body)
-        room_document = collection.find_one({"room_id": response['room_id']})
-        if room_document is not None:
-            collection.update(
-                room_document,
-                {
-                    '$set': {'messages': response['messages']}
-                },
-                upsert=False,
-                multi=False
-            )
-
-class MessageSaver(BaseHandler):
     def post(self):
         response = json.loads(self.request.body)
         room_document = collection.find_one({"room_id": response['room_id']})
@@ -136,19 +122,13 @@ class MessageNewHandler(BaseHandler):
     @tornado.web.authenticated
     @gen.coroutine
     def post(self):
-        #self._log()
-        room = get_room_id(self.request.headers.get('Referer'))
+        room_id = self.get_argument('room_id')
         message = {
-            "room": room,
+            "room": room_id,
             "id": str(uuid.uuid4()),
-            "from": self.current_user,
-            "body": self.get_argument("body"),
+            "user": self.current_user,
+            "body": self.get_argument('body'),
         }
-
-        message["html"] = tornado.escape.to_basestring(
-            self.render_string("message.html", message=message)
-        )
-        logging.log(logging.DEBUG, message["room"])
 
         if self.get_argument("next", None):
             self.redirect(self.get_argument("next"))
@@ -157,17 +137,15 @@ class MessageNewHandler(BaseHandler):
 
         room_buffers[message["room"]].new_messages([message])
         room_buffers[message["room"]].wait_for_messages()
+
         # update messages, write to DB
-        room_document = collection.find_one({"room_id": room})
-        if room_document is not None:
-            collection.update(
-                room_document,
-                {
-                    '$set': {'messages': room_buffers[room].cache}
-                },
-                upsert=False,
-                multi=False
-            )
+        room_document = collection.find_one({"room_id": room_id})
+        collection.update(
+            room_document,
+            {
+                '$addToSet': {'messages': message}
+            }
+        )
 
 
 class MessageUpdatesHandler(BaseHandler):
@@ -271,6 +249,9 @@ class NewRoomHandler(BaseHandler):
             'users': [user]
         })
 
+class UserHandler(BaseHandler):
+    def post(self):
+        self.write(self.get_current_user())
 
 def main():
     parse_command_line()
@@ -283,13 +264,14 @@ def main():
             (r"/auth/login", AuthLoginHandler),
             (r"/auth/logout", AuthLogoutHandler),
             (r"/a/message/new", MessageNewHandler),
-            (r"/a/message/updates", MessageUpdatesHandler)
+            (r"/a/message/updates", MessageUpdatesHandler),
+            (r"/a/user", UserHandler)
         ],
         cookie_secret="666",
         login_url="/auth/login",
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         static_path=os.path.join(os.path.dirname(__file__), "static"),
-        xsrf_cookies=True,
+        xsrf_cookies=False,
         debug=options.debug
     )
     logging.getLogger().setLevel(logging.DEBUG)

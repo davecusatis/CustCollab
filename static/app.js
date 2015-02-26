@@ -6,8 +6,7 @@
 var mainApp = angular.module('ChatApp', ['ngRoute', 'ngCookies',
     'roomControllers', 'roomServices'
 ]);
-
-mainApp.config(function($routeProvider, $httpProvider, $cookies, $locationProvider) {
+mainApp.config(function($routeProvider, $httpProvider, $locationProvider) {
     $routeProvider.
         when('/', {
             templateUrl: '/static/chat.html',
@@ -20,3 +19,9 @@ mainApp.config(function($routeProvider, $httpProvider, $cookies, $locationProvid
 
         //$http.defaults.headers.post['Cookie'] = $cookies['chatdemo_user'];
 });
+
+mainApp.run(['$http', '$cookieStore', '$cookies', function($http, $cookieStore, $cookies){
+
+  $http.defaults.xsrfCookieName = '_xsrf';
+  $http.defaults.xsrfHeaderName = 'X-XSRFToken';
+}]);

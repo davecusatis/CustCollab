@@ -2,10 +2,10 @@
  * Created by David on 2/15/2015.
  */
 
-var roomControllers = angular.module('roomControllers', []);
+var roomControllers = angular.module('roomControllers', ['ngCookies']);
 
-roomControllers.controller('roomCtrl', ['$scope', '$location', 'rooms',
-    function($scope, $location, rooms){
+roomControllers.controller('roomCtrl', ['$scope', '$cookies', '$location', 'rooms', 'roomsPost', 'user',
+    function($scope, $cookies, $location, rooms, roomsPost, user){
         var url = $location.url();
         var roomid = getRoomID(url);
         $scope.user = 'unknown';
@@ -13,15 +13,15 @@ roomControllers.controller('roomCtrl', ['$scope', '$location', 'rooms',
         $scope.messages = [{name: 'test', body: 'test'}];
         $scope.messageText = '';
         $scope.rooms = rooms.get({room_id: roomid});
+        $scope.user = user.get();
 
         $scope.submit = function(name) {
             if ($scope.messageText) {
-                $scope.messages.push({name: 'test', body: $scope.messageText});
+                roomsPost.post({room_id: roomid}, {messages: $scope.messageText});
+                $scope.messages.push({user: $scope.user, body: $scope.messageText});
                 $scope.messageText = '';
             }
 
-            // now save to DB -- this is bad for performance but just for now.
-            rooms.post({room_id: roomid, messages: $scope.messages});
         };
 
         $scope.setUser = function(user) {
@@ -31,8 +31,6 @@ roomControllers.controller('roomCtrl', ['$scope', '$location', 'rooms',
             console.log('roomid: ' + roomid);
             $scope.messages = data;         // get messages for roomz
         });
-
-
     }
 ]);
 
